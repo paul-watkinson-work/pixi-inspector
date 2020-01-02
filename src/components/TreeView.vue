@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import { filter, map, switchMap } from "rxjs/operators";
+import { tap, filter, map, switchMap } from "rxjs/operators";
 import latestInspector$ from "../services/latestInspector$";
 
 export default {
@@ -54,7 +54,10 @@ export default {
       filter(inspector => inspector !== null)
     );
     return {
-      selected: inspector$.pipe(switchMap(inspector => inspector.selected$)),
+      selected: inspector$.pipe(
+        switchMap(inspector => inspector.selected$),
+        tap(this.scrollIntoView)
+      ),
       rows: inspector$.pipe(
         switchMap(inspector => inspector.tree$),
         map(this.flattenTree)
@@ -67,6 +70,19 @@ export default {
     };
   },
   methods: {
+    scrollIntoView(value) {
+      const element = this.$el.querySelector("div[data-id='" + value.id + "']");
+
+      if (!element) {
+        return;
+      }
+
+      if (element.scrollIntoViewIfNeeded) {
+        element.scrollIntoViewIfNeeded();
+      } else if (element.scrollIntoView) {
+        element.scrollIntoView();
+      }
+    },
     flattenTree(tree) {
       const rows = [];
       if (Array.isArray(tree.children)) {
