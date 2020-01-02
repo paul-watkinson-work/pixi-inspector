@@ -59,11 +59,7 @@ export default class InspectorHighlight {
         computed.root.y,
         32 / Math.max(scale.x, scale.y)
       );
-
-      // Render the texture size
-      out.beginFill(0x007eff, 0.3);
-      out.lineStyle(1, 0x007eff, 0.6);
-      out.drawRect(computed.x, computed.y, computed.width, computed.height);
+      out.endFill();
 
       const parent = getComputedPoints(node.parent, scale);
       const offDisplay =
@@ -72,9 +68,32 @@ export default class InspectorHighlight {
         computed.x > renderer.width ||
         computed.y > renderer.height;
 
+      // Show the line to the parent
       out.lineStyle(2, offDisplay ? 0xff0000 : 0x00ff00, 0.3);
       out.moveTo(parent.root.x, parent.root.y);
       out.lineTo(computed.root.x, computed.root.y);
+      out.endFill();
+
+      out.beginFill(0x007eff, 0.3);
+
+      // Render the vertex points of this object
+      if (node.vertexData && node.vertexData.length > 2) {
+        const data = node.vertexData;
+
+        out.lineStyle(1, 0x7e0000, 0.6);
+        out.moveTo(data[0] / scale.x, data[1] / scale.y);
+
+        for (let i = 2; i < data.length; i += 2) {
+          out.lineTo(data[i] / scale.x, data[i + 1] / scale.y);
+        }
+
+        out.closePath();
+      } else {
+        // Render the bounds
+        out.lineStyle(1, 0x007eff, 0.6);
+        out.drawRect(computed.x, computed.y, computed.width, computed.height);
+      }
+
       out.endFill();
     } else {
       out.visible = false;
