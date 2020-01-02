@@ -35,19 +35,51 @@ export default class InspectorProperties {
     if (!window.$pixi) {
       return [];
     }
+
     const properties = [];
+
+    // Check for any manual inspector descriptions
+    const manual = window.$pixi.constructor._inspector || {};
+    const ignore = (manual.blacklist || []).concat(blacklist);
+
     for (const property in window.$pixi) {
-      if (property[0] === "_" || blacklist.indexOf(property) !== -1) {
+      if (property[0] === "_" || ignore.indexOf(property) !== -1) {
         continue;
       }
+
       properties.push(...this.serialize(window.$pixi[property], [property], 3));
     }
+
+    // Enumerate any manual values
+    if (manual.whitelist) {
+      for (const entry of manual.whitelist) {
+        properties.push(...this.serialize(this.get(entry), [entry], 3));
+      }
+    }
+
     properties.sort((a, b) => (a.path > b.path ? 1 : -1));
+
+    // Remove duplicate properties
+    for (let i = properties.length - 1; i >= 1; --i) {
+      if (properties[i].path === properties[i - 1].path) {
+        properties.splice(i, 1);
+      }
+    }
+
     return properties;
   }
+
   /* eslint-disable */
+  get(path) {
+    return eval("$pixi." + path);
+  }
+
   set(path, value) {
     eval("$pixi." + path + " = " + JSON.stringify(value));
+  }
+
+  print(path) {
+    eval("console.log($pixi.name + '." + path + " =', $pixi." + path + ")");
   }
   /* eslint-enable */
 

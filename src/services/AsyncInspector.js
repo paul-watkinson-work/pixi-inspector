@@ -87,6 +87,10 @@ export default class AsyncInspector {
     return this.call("properties.set", path, value);
   }
 
+  printProperty(path) {
+    return this.call("properties.print", path);
+  }
+
   highlight(node) {
     return this.call("outliner.highlight", node.id);
   }

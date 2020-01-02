@@ -1,5 +1,24 @@
 import { overlay } from "./InspectorGui";
 
+function getComputedPoints(node, scale) {
+  const bounds = node.getBounds();
+  const position = node.getGlobalPosition();
+
+  return {
+    original: bounds,
+
+    x: bounds.x / scale.x,
+    y: bounds.y / scale.y,
+    width: bounds.width / scale.x,
+    height: bounds.height / scale.y,
+
+    root: {
+      x: position.x / scale.x,
+      y: position.y / scale.y
+    }
+  };
+}
+
 export default class InspectorHighlight {
   constructor(inspector) {
     this.gui = inspector.gui;
@@ -12,62 +31,53 @@ export default class InspectorHighlight {
   }
 
   update(_, renderer) {
-    const box = this.graphics;
+    const out = this.graphics;
     const node = InspectorHighlight.node;
+
     if (node && node.parent) {
-      box.visible = true;
-      box.clear();
-      // if (node.texture && node.transform && node.transform.worldTransform) {
-      //   box.lineStyle(1, 0xffaa40, 1)
-      //   box.beginFill(0xff8500, 0.235)
-      //   const width = node.texture.width
-      //   const height = node.texture.height
-      //   if (node.anchor) {
-      //     box.drawRect(width * -1 * node.anchor.x, height * -1 * node.anchor.y, width, height)
-      //   } else {
-      //     box.drawRect(0, 0, width, height)
-      //   }
-      //   node.updateTransform()
-      //   box.transform.setFromMatrix(node.transform.worldTransform)
+      out.visible = true;
+      out.clear();
       // } else {
       // if (this.defaultTransform) {
-      //   box.transform.setFromMatrix(this.defaultTransform)
+      //   out.transform.setFromMatrix(this.defaultTransform)
       // }
-      // box.lineStyle(1, 0xffaa40, 1)
-      // box.beginFill(0x007eff, 0.05)
-      box.beginFill(0x007eff, 0.3);
-      box.lineStyle(1, 0x007eff, 0.6);
-      const bounds = node.getBounds();
+      // out.lineStyle(1, 0xffaa40, 1)
+      // out.beginFill(0x007eff, 0.05)
+
       const scale = {
         x: this.gui.resolution.x / renderer.resolution,
         y: this.gui.resolution.y / renderer.resolution
       };
-      box.drawRect(
-        bounds.x * scale.x,
-        bounds.y * scale.y,
-        bounds.width * scale.x,
-        bounds.height * scale.y
+
+      const computed = getComputedPoints(node, scale);
+
+      // Render the root point
+      out.lineStyle(1, 0xffaa40, 1);
+      out.beginFill(0xff8500, 0.235);
+      out.drawCircle(
+        computed.root.x,
+        computed.root.y,
+        32 / Math.max(scale.x, scale.y)
       );
 
-      const offDisplay =
-        bounds.x + bounds.width < 0 ||
-        bounds.y + bounds.height < 0 ||
-        renderer.width / renderer.resolution < bounds.x * scale.x ||
-        renderer.height / renderer.resolution < bounds.y * scale.y;
+      // Render the texture size
+      out.beginFill(0x007eff, 0.3);
+      out.lineStyle(1, 0x007eff, 0.6);
+      out.drawRect(computed.x, computed.y, computed.width, computed.height);
 
-      box
-        .lineStyle(2, offDisplay ? 0xff0000 : 0x007eff, 0.3)
-        .moveTo(
-          renderer.width / renderer.resolution / 2,
-          renderer.height / renderer.resolution / 2
-        )
-        .lineTo(
-          bounds.x * scale.x + (bounds.width * scale.x) / 2,
-          bounds.y * scale.y + (bounds.height * scale.y) / 2
-        );
-      box.endFill();
+      const parent = getComputedPoints(node.parent, scale);
+      const offDisplay =
+        computed.x + computed.width < 0 ||
+        computed.y + computed.height < 0 ||
+        computed.x > renderer.width ||
+        computed.y > renderer.height;
+
+      out.lineStyle(2, offDisplay ? 0xff0000 : 0x00ff00, 0.3);
+      out.moveTo(parent.root.x, parent.root.y);
+      out.lineTo(computed.root.x, computed.root.y);
+      out.endFill();
     } else {
-      box.visible = false;
+      out.visible = false;
     }
   }
 }

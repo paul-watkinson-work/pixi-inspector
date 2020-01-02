@@ -1,9 +1,10 @@
 <template>
   <div class="detailview">
     <div v-for="field in fields" :key="field.path" class="detailview__item">
-      <div class="detailview__label">
+      <div class="detailview__label" @click="printProperty(field.path)">
         {{ field.path }}
       </div>
+      <span class="detailview__splitter">:</span>
       <DetailValue :field="field" @change="setProperty(field.path, $event)" />
     </div>
   </div>
@@ -33,7 +34,8 @@ export default {
           );
         })
       ),
-      setProperty: latestInspector$.method("setProperty")
+      setProperty: latestInspector$.method("setProperty"),
+      printProperty: latestInspector$.method("printProperty")
     };
   }
 };
@@ -53,12 +55,17 @@ export default {
   display: inline-block;
   color: #c80000;
   padding-right: 5px;
-  &:after {
-    content: ":";
-    color: #000;
+  &:hover {
+    cursor: pointer;
+    text-decoration: underline;
   }
   .dark-mode & {
     color: #35d4c7;
   }
+}
+
+.detailview__splitter {
+  color: #000;
+  padding-right: 5px;
 }
 </style>

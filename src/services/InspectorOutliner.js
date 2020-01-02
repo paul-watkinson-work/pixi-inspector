@@ -8,6 +8,8 @@ import InspectorHighlight from "./InspectorHighlight";
 
 const outliner = Symbol("outliner");
 
+const blacklist = ["PIXI.Container"].map(entry => "(" + entry + ")");
+
 export default class InspectorOutliner {
   constructor(inspector) {
     this.inspector = inspector;
@@ -155,8 +157,7 @@ export default class InspectorOutliner {
   }
 
   nodeAt(node, point) {
-    if (node.visible === false) {
-      // || node.renderable === false
+    if (node.visible === false || node.worldAlpha === 0) {
       return false;
     }
     if (node.children && node.children.length) {
@@ -167,6 +168,15 @@ export default class InspectorOutliner {
         }
       }
     }
+
+    const type = this.inspector.typeDetection.detectType(node);
+
+    for (const entry of blacklist) {
+      if (type.slice(-entry.length) === entry) {
+        return false;
+      }
+    }
+
     if (node.containsPoint) {
       if (node.containsPoint(point)) {
         return node;
