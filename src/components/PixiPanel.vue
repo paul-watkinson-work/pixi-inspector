@@ -102,6 +102,10 @@ export default {
   color: #bdc6cf;
 }
 
+body > .pixi-panel.dark-mode {
+  background: #202124;
+}
+
 .pixi-panel__body {
   flex-grow: 1;
   height: calc(100% - 28px); // minus toolbar height
